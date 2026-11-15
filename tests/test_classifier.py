@@ -26,6 +26,12 @@ class ClassifierTests(unittest.TestCase):
             Intent.PROJECT_PROPOSAL,
         )
 
+    def test_decision_with_hedge_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich denke, wir müssen die API austauschen."),
+            Intent.DECISION,
+        )
+
     def test_qualified_wish_to_perform_a_technical_action_is_detected(self):
         self.assertEqual(
             classify_message("Ich möchte ein weiteres KI-Modell integrieren."),
