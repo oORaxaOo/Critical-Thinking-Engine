@@ -3,6 +3,8 @@
 This is a routing heuristic, not a truth detector. Ambiguous messages stay UNKNOWN.
 """
 
+import re
+
 from .models import Intent
 
 _PERSONAL = (
@@ -15,13 +17,20 @@ _OPINION = (
     "ich bevorzuge", "für mich", "fuer mich",
 )
 _PROPOSAL = (
-    "ich möchte", "ich moechte", "ich will", "wir sollten", "lass uns",
-    "ich schlage vor", "mein vorschlag", "ich plane", "wir könnten",
-    "wir koennten",
+    "wir sollten", "lass uns", "ich schlage vor", "mein vorschlag",
+    "ich plane", "wir könnten", "wir koennten",
 )
 _DECISION = (
     "wir entscheiden", "ich entscheide", "sollen wir", "soll ich",
-    "sollen wir jetzt", "ich werde", "wir werden",
+    "sollen wir jetzt", "ich werde", "wir werden", "wir müssen",
+    "wir muessen",
+)
+_ACTION_PROPOSAL = re.compile(
+    r"\bich\s+(?:möchte|moechte|will)\b.{0,80}\b"
+    r"(?:bauen|integrieren|einbauen|installieren|einsetzen|ändern|aendern|"
+    r"ersetzen|einführen|einfuehren|verwenden|nutzen|starten|umsetzen|"
+    r"entwickeln|aktivieren|deaktivieren|löschen|loeschen|migrieren|"
+    r"verbinden|anschließen|anschliessen|konfigurieren|anpassen)\b"
 )
 _QUESTION_STARTS = ("warum ", "wie ", "was ", "welche ", "welcher ", "kann ", "können ", "koennen ")
 _FACTUAL_MARKERS = (
@@ -38,14 +47,20 @@ def classify_message(message: str) -> Intent:
 
     text = " ".join(message.casefold().split())
 
+    # Personal experience has priority: do not convert an emotional statement
+    # into a debate simply because it contains technical vocabulary.
     if any(marker in text for marker in _PERSONAL):
         return Intent.PERSONAL_EXPERIENCE
-    if any(marker in text for marker in _OPINION):
-        return Intent.OPINION
+
+    # Detect the actual proposal/decision before hedging phrases such as
+    # "I think" or "I believe". Otherwise common proposal prefaces hide intent.
     if any(marker in text for marker in _DECISION):
         return Intent.DECISION
-    if any(marker in text for marker in _PROPOSAL):
+    if any(marker in text for marker in _PROPOSAL) or _ACTION_PROPOSAL.search(text):
         return Intent.PROJECT_PROPOSAL
+
+    if any(marker in text for marker in _OPINION):
+        return Intent.OPINION
     if text.endswith("?") or text.startswith(_QUESTION_STARTS):
         return Intent.QUESTION
     if any(marker in text for marker in _FACTUAL_MARKERS):
