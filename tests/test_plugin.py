@@ -44,6 +44,11 @@ class PluginTests(unittest.TestCase):
             before_llm_call(user_message="Ich möchte wissen, wie das Plugin funktioniert?")
         )
 
+    def test_technical_factual_claim_gets_evidence_guidance(self):
+        result = before_llm_call(user_message="Das Hermes-Plugin funktioniert garantiert.")
+        self.assertIsInstance(result, dict)
+        self.assertIn("technical factual claim", result["context"])
+
     def test_hook_fails_open_when_internal_logic_raises(self):
         with patch("critical_thinking.plugin.classify_message", side_effect=RuntimeError("test")):
             self.assertIsNone(before_llm_call(user_message="Wir sollten ein Plugin bauen."))
