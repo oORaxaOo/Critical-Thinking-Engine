@@ -31,6 +31,13 @@ class PolicyTests(unittest.TestCase):
         request = choose_review_level("Wie lösche ich alte Testdaten?", Intent.QUESTION)
         self.assertEqual(request.level, ReviewLevel.NORMAL)
 
+    def test_technical_factual_claim_gets_review(self):
+        request = choose_review_level(
+            "Das Hermes-Plugin funktioniert garantiert.",
+            Intent.FACTUAL_CLAIM,
+        )
+        self.assertEqual(request.level, ReviewLevel.REVIEW)
+
     def test_unrelated_question_does_not_trigger_review(self):
         request = choose_review_level("Wie spät ist es?", Intent.QUESTION)
         self.assertEqual(request.level, ReviewLevel.NORMAL)
