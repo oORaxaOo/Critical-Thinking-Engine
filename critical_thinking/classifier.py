@@ -21,7 +21,8 @@ _PROPOSAL = (
 )
 _DECISION = (
     "wir entscheiden", "ich entscheide", "sollen wir", "soll ich",
-    "sollen wir jetzt", "ich werde", "wir werden",
+    "sollen wir jetzt", "ich werde", "wir werden", "wir müssen",
+    "wir muessen",
 )
 _QUESTION_STARTS = ("warum ", "wie ", "was ", "welche ", "welcher ", "kann ", "können ", "koennen ")
 _FACTUAL_MARKERS = (
@@ -38,14 +39,20 @@ def classify_message(message: str) -> Intent:
 
     text = " ".join(message.casefold().split())
 
+    # Personal experience has priority: do not convert an emotional statement
+    # into a debate simply because it contains technical vocabulary.
     if any(marker in text for marker in _PERSONAL):
         return Intent.PERSONAL_EXPERIENCE
-    if any(marker in text for marker in _OPINION):
-        return Intent.OPINION
+
+    # Detect the actual proposal/decision before hedging phrases such as
+    # "I think" or "I believe". Otherwise common proposal prefaces hide intent.
     if any(marker in text for marker in _DECISION):
         return Intent.DECISION
     if any(marker in text for marker in _PROPOSAL):
         return Intent.PROJECT_PROPOSAL
+
+    if any(marker in text for marker in _OPINION):
+        return Intent.OPINION
     if text.endswith("?") or text.startswith(_QUESTION_STARTS):
         return Intent.QUESTION
     if any(marker in text for marker in _FACTUAL_MARKERS):
