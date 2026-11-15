@@ -15,14 +15,27 @@ A lightweight, privacy-first decision-support layer for Hermes Agent. The CTE he
 
 The classifier is deliberately heuristic. It is a routing aid, not a truth detector, and ambiguous messages should not automatically receive critical review.
 
-## Repository status
+## Status
 
-The first implementation is on the `feat/cte-v0.1-core` branch. It is not installed into a live Hermes environment and is not yet validated against the user's running Hermes process. Review the architecture and privacy boundaries in `docs/` before installation.
+The initial v0.1 implementation and follow-up classifier improvements are merged into `main`.
+
+The plugin has **not** been installed or enabled in a live Hermes profile. Unit tests and CI do not replace validation through the exact Hermes installation that will run Lilith.
 
 ## Tests
 
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Hermes validation
+
+From the repository root, using the same Hermes v0.23.1 installation intended for Lilith:
+
+```bash
+hermes plugins validate .
+hermes plugins doctor . --ci
+```
+
+These checks validate admission rules and exercise the real plugin discovery/registration runtime in an isolated temporary Hermes home. They do not enable the plugin in the active profile or prove behavior in a running WhatsApp gateway.
 
 See [Architecture](docs/ARCHITECTURE.md), [Privacy](docs/PRIVACY.md), and [Configuration](docs/CONFIGURATION.md).

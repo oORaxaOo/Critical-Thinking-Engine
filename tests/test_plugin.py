@@ -23,6 +23,20 @@ class PluginTests(unittest.TestCase):
         self.assertEqual(set(ctx.hooks), {"pre_llm_call"})
         self.assertIs(ctx.hooks["pre_llm_call"], before_llm_call)
 
+    def test_hermes_v0231_pre_llm_payload_injects_ephemeral_context(self):
+        # Hermes v0.23.1 documents these fields for pre_llm_call.
+        result = before_llm_call(
+            session_id="test-session",
+            user_message="Wir sollten ein Hermes-Plugin bauen.",
+            conversation_history=[],
+            is_first_turn=True,
+            model="test-model",
+            platform="cli",
+        )
+        self.assertEqual(set(result), {"context"})
+        self.assertIn("REVIEW", result["context"])
+        self.assertIn("technical proposal or decision", result["context"])
+
     def test_personal_message_does_not_inject_critique(self):
         self.assertIsNone(before_llm_call(user_message="Ich bin traurig."))
 
