@@ -26,6 +26,18 @@ class ClassifierTests(unittest.TestCase):
             Intent.PROJECT_PROPOSAL,
         )
 
+    def test_qualified_wish_to_perform_a_technical_action_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich möchte ein weiteres KI-Modell integrieren."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
+    def test_information_request_is_not_misclassified_as_a_proposal(self):
+        self.assertEqual(
+            classify_message("Ich möchte wissen, wie das Plugin funktioniert?"),
+            Intent.QUESTION,
+        )
+
     def test_question_is_detected(self):
         self.assertEqual(classify_message("Warum funktioniert das Plugin nicht?"), Intent.QUESTION)
 
