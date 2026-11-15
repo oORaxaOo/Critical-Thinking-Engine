@@ -1,6 +1,6 @@
 """Build concise, bounded instructions for the active model."""
 
-from .models import ReviewLevel, ReviewRequest
+from .models import Intent, ReviewLevel, ReviewRequest
 
 _BASE = """Critical Thinking Engine — response guidance:
 Do not agree merely to be agreeable. Form an independent, reasoned position.
@@ -19,7 +19,13 @@ def build_review_context(request: ReviewRequest) -> str:
     if request.level is ReviewLevel.NORMAL:
         return ""
 
-    if request.level is ReviewLevel.CRITICAL:
+    if request.intent is Intent.FACTUAL_CLAIM and request.level is ReviewLevel.REVIEW:
+        extra = """Review intensity: REVIEW — technical factual claim.
+Treat the statement as a claim to assess, not as an established fact. Separate what is
+verified from what is inferred or unknown. Use only evidence actually available in the
+conversation or your accessible sources; do not invent tests, source checks, or citations.
+If the claim cannot be verified, say so plainly and name the evidence that would settle it."""
+    elif request.level is ReviewLevel.CRITICAL:
         extra = """Review intensity: CRITICAL.
 Check material assumptions, dependencies, security/privacy implications, failure modes,
 reversibility, simpler alternatives, and what evidence would change the recommendation.
