@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Critical Thinking Engine (CTE) is a lightweight decision-support layer for Hermes Agent. It reduces reflexive agreement by injecting bounded review guidance only when deterministic routing identifies a technical proposal, decision, or explicit review request.
+The Critical Thinking Engine (CTE) is a lightweight decision-support layer for Hermes Agent. It reduces reflexive agreement by injecting bounded review guidance when deterministic routing identifies a technical proposal, decision, technical factual claim, or explicit review request.
 
 ## Boundaries
 
@@ -24,17 +24,19 @@ The CTE is not a truth oracle. Its classifier is heuristic, and the active model
 
 ## Review policy
 
-- NORMAL: personal experiences, opinions, routine questions, ambiguous messages.
-- REVIEW: technical project proposals and decisions.
-- CRITICAL: explicit critical-review requests and high-impact signals such as security, privacy, irreversible changes, or system-wide architecture changes.
+- NORMAL: personal experiences, opinions, routine questions, ambiguous messages, and non-technical factual statements.
+- REVIEW: technical project proposals and decisions; technical factual claims receive a separate evidence-focused review.
+- CRITICAL: explicit critical-review requests and high-impact decisions such as security, privacy, irreversible changes, or system-wide architecture changes.
 
-Personal experiences and opinions take precedence over keyword matches so they are not automatically challenged.
+Personal experiences take precedence over keyword matches so they are not automatically challenged. Opinions are not automatically challenged unless the user explicitly requests a review. The classifier recognizes common hedged proposals while avoiding generic wish phrases that would turn questions such as "I want to know how this works" into project decisions.
 
 ## Position contract
 
-For reviewed decisions, the model is asked to choose SUPPORT, CHANGE, REJECT, or INSUFFICIENT_INFORMATION; state decisive reasons; separate facts, assumptions, and unknowns; and suggest a better alternative when appropriate.
+For reviewed proposals and decisions, the model is asked to choose SUPPORT, CHANGE, REJECT, or INSUFFICIENT_INFORMATION; state decisive reasons; separate facts, assumptions, and unknowns; and suggest a better alternative when appropriate.
 
-This is an instruction contract, not a verified structured output. v0.1 does not claim to validate the truth of the model's answer.
+For technical factual claims, the model is asked to distinguish verified evidence from inference and unknowns. It must not invent tests, source checks, or citations. If the claim cannot be verified, it should say so and identify what evidence would settle it.
+
+This is an instruction contract, not a verified structured output. The hook appends guidance to the current user message; it is not a privileged system-level policy and does not guarantee that the model will follow it. v0.1 does not claim to validate the truth of the model's answer.
 
 ## Privacy and performance
 
