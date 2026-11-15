@@ -12,6 +12,13 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("practical better alternative", prompt)
         self.assertIn("Do not agree merely", prompt)
 
+    def test_technical_fact_claim_uses_evidence_focused_guidance(self):
+        request = ReviewRequest(Intent.FACTUAL_CLAIM, ReviewLevel.REVIEW, "technical claim")
+        prompt = build_review_context(request)
+        self.assertIn("technical factual claim", prompt)
+        self.assertIn("Separate what is", prompt)
+        self.assertIn("do not invent tests", prompt)
+
     def test_normal_level_has_no_context(self):
         request = ReviewRequest(Intent.UNKNOWN, ReviewLevel.NORMAL, "none")
         self.assertEqual(build_review_context(request), "")
