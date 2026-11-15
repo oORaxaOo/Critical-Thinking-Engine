@@ -59,10 +59,12 @@ def classify_message(message: str) -> Intent:
     if any(marker in text for marker in _PROPOSAL) or _ACTION_PROPOSAL.search(text):
         return Intent.PROJECT_PROPOSAL
 
-    if any(marker in text for marker in _OPINION):
-        return Intent.OPINION
+    # Questions remain questions even when their wording contains a factual verb.
     if text.endswith("?") or text.startswith(_QUESTION_STARTS):
         return Intent.QUESTION
+    # A hedge ("I think / I believe") must not hide a concrete factual claim.
     if any(marker in text for marker in _FACTUAL_MARKERS):
         return Intent.FACTUAL_CLAIM
+    if any(marker in text for marker in _OPINION):
+        return Intent.OPINION
     return Intent.UNKNOWN
