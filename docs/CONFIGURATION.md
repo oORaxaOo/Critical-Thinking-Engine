@@ -2,13 +2,11 @@
 
 ## Install layout
 
-Copy this repository's plugin directory contents into:
+Copy this repository's plugin contents into:
 
 `~/.hermes/plugins/critical-thinking-engine/`
 
-The directory must contain `plugin.yaml`, `__init__.py`, and the `critical_thinking/` package.
-
-Enable the plugin through Hermes' normal plugin management workflow after reviewing the files. Restart the relevant Hermes process if required by the installed version.
+The plugin root must contain `plugin.yaml`, `__init__.py`, and the `critical_thinking/` package. The repository's tests and documentation are not required by Hermes at runtime.
 
 ## Current behavior
 
@@ -18,10 +16,17 @@ v0.1 has no user settings and registers only `pre_llm_call`. It does not registe
 
 Run the standalone test suite:
 
-`python -m unittest discover -s tests -v`
+```bash
+python -m unittest discover -s tests -v
+```
 
-Then validate the plugin with the Hermes version actually installed:
+Then run Hermes' plugin checks using the same installed Hermes version:
 
-`hermes plugins validate /path/to/critical-thinking-engine`
+```bash
+hermes plugins validate /path/to/critical-thinking-engine
+hermes plugins doctor /path/to/critical-thinking-engine
+```
 
-A successful unit test run does not replace live Hermes integration testing.
+`validate` checks the plugin package and declared registrations. `doctor` exercises plugin discovery, manifest loading, and `register(ctx)` in a temporary Hermes home. Neither command replaces a live integration test in the actual profile and gateway process.
+
+Do not enable the plugin in the normal Hermes profile until the repository review and isolated doctor checks are satisfactory. A successful unit test run alone does not prove live compatibility.

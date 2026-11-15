@@ -14,6 +14,42 @@ class ClassifierTests(unittest.TestCase):
     def test_technical_proposal_is_detected(self):
         self.assertEqual(classify_message("Wir sollten ein weiteres KI-Modell integrieren."), Intent.PROJECT_PROPOSAL)
 
+    def test_hedged_technical_proposal_is_not_lost_as_an_opinion(self):
+        self.assertEqual(
+            classify_message("Ich glaube, wir sollten ein weiteres KI-Modell integrieren."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
+    def test_proposal_with_opinion_preface_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich finde, wir sollten die API austauschen."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
+    def test_decision_with_hedge_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich denke, wir müssen die API austauschen."),
+            Intent.DECISION,
+        )
+
+    def test_qualified_wish_to_perform_a_technical_action_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich möchte ein weiteres KI-Modell integrieren."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
+    def test_information_request_is_not_misclassified_as_a_proposal(self):
+        self.assertEqual(
+            classify_message("Ich möchte wissen, wie das Plugin funktioniert?"),
+            Intent.QUESTION,
+        )
+
+    def test_hedged_technical_factual_claim_is_not_lost_as_an_opinion(self):
+        self.assertEqual(
+            classify_message("Ich glaube, das Hermes-Plugin funktioniert garantiert."),
+            Intent.FACTUAL_CLAIM,
+        )
+
     def test_question_is_detected(self):
         self.assertEqual(classify_message("Warum funktioniert das Plugin nicht?"), Intent.QUESTION)
 
