@@ -1,32 +1,33 @@
-# Configuration
+# Configuration and Validation
 
 ## Install layout
 
-Copy this repository's plugin contents into:
+For a future installation, the plugin root must contain `plugin.yaml`, `__init__.py`, and the `critical_thinking/` package. The repository's tests and documentation are not required by Hermes at runtime.
 
-`~/.hermes/plugins/critical-thinking-engine/`
-
-The plugin root must contain `plugin.yaml`, `__init__.py`, and the `critical_thinking/` package. The repository's tests and documentation are not required by Hermes at runtime.
+Do not copy or enable the plugin in the normal Hermes profile yet. Complete the isolated checks below first.
 
 ## Current behavior
 
 v0.1 has no user settings and registers only `pre_llm_call`. It does not register tools, commands, background jobs, or model providers.
 
-## Verification
+## Validation against Hermes v0.23.1
 
-Run the standalone test suite:
+Run these commands from the repository root, using the same Hermes installation that will run Lilith:
+
+```bash
+hermes plugins validate .
+hermes plugins doctor . --ci
+```
+
+- `validate` checks plugin admission requirements, manifest parsing, loadability, declared capabilities, and related catalog/security checks.
+- `doctor` stages a copy in a temporary Hermes home, blocks outbound socket connections during the check, and loads the plugin through Hermes' real discovery and registration runtime.
+- Neither command enables the plugin in the active profile.
+- Neither command proves behavior inside the running WhatsApp gateway. A separate controlled integration test is still required.
+
+Run the repository unit tests separately:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Then run Hermes' plugin checks using the same installed Hermes version:
-
-```bash
-hermes plugins validate /path/to/critical-thinking-engine
-hermes plugins doctor /path/to/critical-thinking-engine
-```
-
-`validate` checks the plugin package and declared registrations. `doctor` exercises plugin discovery, manifest loading, and `register(ctx)` in a temporary Hermes home. Neither command replaces a live integration test in the actual profile and gateway process.
-
-Do not enable the plugin in the normal Hermes profile until the repository review and isolated doctor checks are satisfactory. A successful unit test run alone does not prove live compatibility.
+Record the exact Hermes version and complete command output before deciding whether the plugin is ready for installation.
