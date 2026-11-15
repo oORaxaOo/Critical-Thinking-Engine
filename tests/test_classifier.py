@@ -14,6 +14,18 @@ class ClassifierTests(unittest.TestCase):
     def test_technical_proposal_is_detected(self):
         self.assertEqual(classify_message("Wir sollten ein weiteres KI-Modell integrieren."), Intent.PROJECT_PROPOSAL)
 
+    def test_hedged_technical_proposal_is_not_lost_as_an_opinion(self):
+        self.assertEqual(
+            classify_message("Ich glaube, wir sollten ein weiteres KI-Modell integrieren."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
+    def test_proposal_with_opinion_preface_is_detected(self):
+        self.assertEqual(
+            classify_message("Ich finde, wir sollten die API austauschen."),
+            Intent.PROJECT_PROPOSAL,
+        )
+
     def test_question_is_detected(self):
         self.assertEqual(classify_message("Warum funktioniert das Plugin nicht?"), Intent.QUESTION)
 
