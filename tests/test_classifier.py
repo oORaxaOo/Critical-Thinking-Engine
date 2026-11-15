@@ -44,6 +44,12 @@ class ClassifierTests(unittest.TestCase):
             Intent.QUESTION,
         )
 
+    def test_hedged_technical_factual_claim_is_not_lost_as_an_opinion(self):
+        self.assertEqual(
+            classify_message("Ich glaube, das Hermes-Plugin funktioniert garantiert."),
+            Intent.FACTUAL_CLAIM,
+        )
+
     def test_question_is_detected(self):
         self.assertEqual(classify_message("Warum funktioniert das Plugin nicht?"), Intent.QUESTION)
 
