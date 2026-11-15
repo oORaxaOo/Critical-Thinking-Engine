@@ -14,8 +14,9 @@ _TECHNICAL_TERMS = (
     "hardware", "integration", "automatisierung", "workflow",
 )
 _REVIEW_REQUESTS = (
-    "/ct review", "/ct critical", "prüfe kritisch", "pruefe kritisch",
-    "hinterfrage das", "red team", "red-team", "widersprich mir",
+    "prüfe kritisch", "pruefe kritisch", "kritische prüfung",
+    "kritische pruefung", "hinterfrage das", "red team", "red-team",
+    "widersprich mir",
 )
 
 
@@ -26,20 +27,28 @@ def choose_review_level(message: str, intent: Intent) -> ReviewRequest:
     critical_hits = tuple(term for term in _CRITICAL_TERMS if term in text)
     technical = any(term in text for term in _TECHNICAL_TERMS)
 
-    if intent in (Intent.PERSONAL_EXPERIENCE, Intent.OPINION):
-        return ReviewRequest(intent, ReviewLevel.NORMAL, "Personal experience and opinions are not automatically challenged.")
+    # Feelings are never automatically treated as claims to refute.
+    if intent is Intent.PERSONAL_EXPERIENCE:
+        return ReviewRequest(intent, ReviewLevel.NORMAL, "Personal experiences are not automatically challenged.")
 
-    if critical_hits:
-        return ReviewRequest(
-            intent, ReviewLevel.CRITICAL,
-            "High-impact or sensitive decision signal detected.",
-            requested, critical_hits,
-        )
-
+    # An explicit request for critique overrides an ordinary opinion.
     if requested:
         return ReviewRequest(intent, ReviewLevel.CRITICAL, "The user explicitly requested a critical review.", True)
 
-    if intent in (Intent.PROJECT_PROPOSAL, Intent.DECISION) and technical:
+    # High-impact vocabulary matters only when the message is actually proposing
+    # or deciding something; merely asking about security or deletion is not enough.
+    decision_intent = intent in (Intent.PROJECT_PROPOSAL, Intent.DECISION)
+    if decision_intent and critical_hits:
+        return ReviewRequest(
+            intent, ReviewLevel.CRITICAL,
+            "High-impact or sensitive decision signal detected.",
+            False, critical_hits,
+        )
+
+    if intent is Intent.OPINION:
+        return ReviewRequest(intent, ReviewLevel.NORMAL, "Opinions are not automatically challenged.")
+
+    if decision_intent and technical:
         return ReviewRequest(
             intent, ReviewLevel.REVIEW,
             "Technical proposal or decision detected.",
