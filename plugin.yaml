@@ -1,0 +1,5 @@
+name: critical-thinking-engine
+version: 0.1.0
+description: A lightweight, privacy-first critical review layer for Hermes Agent.
+provides_hooks:
+  - pre_llm_call
