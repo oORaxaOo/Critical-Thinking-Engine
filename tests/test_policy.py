@@ -15,13 +15,21 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(request.level, ReviewLevel.REVIEW)
 
     def test_sensitive_architecture_change_gets_critical(self):
-        request = choose_review_level("Wir sollten die komplette Architektur ändern.", Intent.DECISION)
+        request = choose_review_level("Wir sollten die komplette Architektur ändern.", Intent.PROJECT_PROPOSAL)
         self.assertEqual(request.level, ReviewLevel.CRITICAL)
 
     def test_explicit_review_request_gets_critical(self):
         request = choose_review_level("Prüfe kritisch: Ist dieser Plan sinnvoll?", Intent.QUESTION)
         self.assertEqual(request.level, ReviewLevel.CRITICAL)
         self.assertTrue(request.user_requested)
+
+    def test_explicit_review_request_can_challenge_an_opinion(self):
+        request = choose_review_level("Ich finde das gut. Prüfe kritisch, ob das stimmt.", Intent.OPINION)
+        self.assertEqual(request.level, ReviewLevel.CRITICAL)
+
+    def test_security_question_does_not_trigger_critical_review(self):
+        request = choose_review_level("Wie lösche ich alte Testdaten?", Intent.QUESTION)
+        self.assertEqual(request.level, ReviewLevel.NORMAL)
 
     def test_unrelated_question_does_not_trigger_review(self):
         request = choose_review_level("Wie spät ist es?", Intent.QUESTION)
