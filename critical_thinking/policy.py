@@ -45,6 +45,13 @@ def choose_review_level(message: str, intent: Intent) -> ReviewRequest:
             False, critical_hits,
         )
 
+    if intent is Intent.FACTUAL_CLAIM and technical:
+        return ReviewRequest(
+            intent, ReviewLevel.REVIEW,
+            "Technical factual claim detected; evidence and uncertainty need checking.",
+            False, ("technical_claim_signal",),
+        )
+
     if intent is Intent.OPINION:
         return ReviewRequest(intent, ReviewLevel.NORMAL, "Opinions are not automatically challenged.")
 
