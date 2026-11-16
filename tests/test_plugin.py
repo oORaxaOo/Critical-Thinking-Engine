@@ -3,18 +3,14 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from critical_thinking.plugin import before_llm_call, register
 
 
 class FakeContext:
-    def __init__(self, settings=None):
+    def __init__(self):
         self.hooks = {}
-        self.settings = settings or {}
-
-    def get_config(self, key, default=None):
-        return self.settings.get(key, default)
 
     def register_hook(self, name, callback):
         self.hooks[name] = callback
@@ -25,47 +21,6 @@ class PluginTests(unittest.TestCase):
         ctx = FakeContext()
         register(ctx)
         self.assertEqual(set(ctx.hooks), {"pre_llm_call"})
-        self.assertIs(ctx.hooks["pre_llm_call"], before_llm_call)
-
-    def test_publishes_minimal_review_metadata_when_kie_is_configured(self):
-        publisher = Mock()
-        fake_kie = types.ModuleType("kie")
-        fake_kie.__path__ = []
-        fake_publisher_module = types.ModuleType("kie.publisher")
-        fake_publisher_module.publish_critical_thinking_review = publisher
-        with patch.dict(sys.modules, {"kie": fake_kie, "kie.publisher": fake_publisher_module}):
-            ctx = FakeContext({"kie_database": "/tmp/kie-test.sqlite3"})
-            register(ctx)
-            result = ctx.hooks["pre_llm_call"](
-                user_message="Wir sollten ein Hermes-Plugin bauen."
-            )
-        self.assertIn("context", result)
-        publisher.assert_called_once()
-        args, kwargs = publisher.call_args
-        self.assertEqual(args[0], "/tmp/kie-test.sqlite3")
-        self.assertEqual(kwargs["intent"], "project_proposal")
-        self.assertEqual(kwargs["review_level"], "review")
-        self.assertTrue(kwargs["context_injected"])
-        self.assertNotIn("user_message", kwargs)
-
-    def test_kie_publication_failure_does_not_block_review_context(self):
-        publisher = Mock(side_effect=OSError("database unavailable"))
-        fake_kie = types.ModuleType("kie")
-        fake_kie.__path__ = []
-        fake_publisher_module = types.ModuleType("kie.publisher")
-        fake_publisher_module.publish_critical_thinking_review = publisher
-        with patch.dict(sys.modules, {"kie": fake_kie, "kie.publisher": fake_publisher_module}):
-            ctx = FakeContext({"kie_database": "/tmp/kie-test.sqlite3"})
-            register(ctx)
-            result = ctx.hooks["pre_llm_call"](
-                user_message="Wir sollten ein Hermes-Plugin bauen."
-            )
-        self.assertIn("context", result)
-        publisher.assert_called_once()
-
-    def test_relative_kie_database_path_does_not_enable_publisher(self):
-        ctx = FakeContext({"kie_database": "relative/kie.sqlite3"})
-        register(ctx)
         self.assertIs(ctx.hooks["pre_llm_call"], before_llm_call)
 
     def test_hermes_v0231_pre_llm_payload_injects_ephemeral_context(self):
