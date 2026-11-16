@@ -39,3 +39,8 @@ hermes plugins doctor . --ci
 These checks validate admission rules and exercise the real plugin discovery/registration runtime in an isolated temporary Hermes home. They do not enable the plugin in the active profile or prove behavior in a running WhatsApp gateway.
 
 See [Architecture](docs/ARCHITECTURE.md), [Privacy](docs/PRIVACY.md), and [Configuration](docs/CONFIGURATION.md).
+
+
+## KIE event integration
+
+The CTE can optionally publish a `critical_thinking.review_routed` event when it injects REVIEW or CRITICAL guidance. Configure `kie_event_socket` with the same absolute local socket path used by KIE. Only the intent class, review level, explicit-request flag, and bounded signal identifiers are sent; the original message and review text are never transmitted. Publishing is fail-open and disabled when no socket path is configured.
