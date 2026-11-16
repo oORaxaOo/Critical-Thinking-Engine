@@ -10,7 +10,12 @@ from uuid import uuid4
 _MAX_MESSAGE_BYTES = 64 * 1024
 
 
-def _send(socket_path: str | Path | None, payload: dict[str, Any]) -> bool:
+def _send(
+    socket_path: str | Path | None,
+    payload: dict[str, Any],
+    *,
+    event_type: str = "critical_thinking.review_routed",
+) -> bool:
     """Send one small event to KIE; a missing receiver never blocks CTE."""
     if not isinstance(socket_path, (str, Path)) or not str(socket_path).strip():
         return False
@@ -20,7 +25,7 @@ def _send(socket_path: str | Path | None, payload: dict[str, Any]) -> bool:
     message = {
         "event_id": str(uuid4()),
         "engine_id": "critical_thinking",
-        "event_type": "critical_thinking.review_routed",
+        "event_type": event_type,
         "payload": payload,
     }
     try:
@@ -53,4 +58,13 @@ def publish_review_routed(socket_path: str | Path | None, request: Any) -> bool:
         return False
 
 
-__all__ = ["publish_review_routed"]
+def publish_hook_failure(socket_path: str | Path | None) -> bool:
+    """Publish one stable hook-failure code without exception or message content."""
+    return _send(
+        socket_path,
+        {"failure_code": "hook_exception"},
+        event_type="critical_thinking.hook_failure",
+    )
+
+
+__all__ = ["publish_review_routed", "publish_hook_failure"]
