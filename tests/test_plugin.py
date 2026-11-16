@@ -15,13 +15,17 @@ class FakeContext:
     def register_hook(self, name, callback):
         self.hooks[name] = callback
 
+    def get_config(self, key, default=None):
+        return default
+
 
 class PluginTests(unittest.TestCase):
     def test_registers_only_pre_llm_hook(self):
         ctx = FakeContext()
         register(ctx)
         self.assertEqual(set(ctx.hooks), {"pre_llm_call"})
-        self.assertIs(ctx.hooks["pre_llm_call"], before_llm_call)
+        self.assertTrue(callable(ctx.hooks["pre_llm_call"]))
+        self.assertIsNot(ctx.hooks["pre_llm_call"], before_llm_call)
 
     def test_hermes_v0231_pre_llm_payload_injects_ephemeral_context(self):
         # Hermes v0.23.1 documents these fields for pre_llm_call.
@@ -35,7 +39,7 @@ class PluginTests(unittest.TestCase):
         )
         self.assertEqual(set(result), {"context"})
         self.assertIn("REVIEW", result["context"])
-        self.assertIn("technical proposal or decision", result["context"])
+        self.assertIn("Technical proposal or decision detected.", result["context"])
 
     def test_personal_message_does_not_inject_critique(self):
         self.assertIsNone(before_llm_call(user_message="Ich bin traurig."))

@@ -5,12 +5,14 @@ import logging
 from .classifier import classify_message
 from .policy import choose_review_level, should_inject_review
 from .prompt_builder import build_review_context
+from .kie_events import publish_review_routed
 
 logger = logging.getLogger(__name__)
 
 
 def before_llm_call(**kwargs):
     """Inject bounded review guidance for relevant turns only."""
+    event_publisher = kwargs.pop("_kie_event_publisher", None)
     try:
         message = kwargs.get("user_message", "")
         if not isinstance(message, str) or not message.strip():
@@ -24,6 +26,11 @@ def before_llm_call(**kwargs):
         context = build_review_context(request)
         if not context:
             return None
+        if callable(event_publisher):
+            try:
+                event_publisher(request)
+            except Exception as exc:
+                logger.warning("KIE event publication failed (%s); continuing without ingress", type(exc).__name__)
         return {"context": context}
     except Exception:
         # The CTE must never prevent Hermes from answering.
@@ -32,5 +39,16 @@ def before_llm_call(**kwargs):
 
 
 def register(ctx):
-    """Register the CTE's single dynamic per-turn hook."""
-    ctx.register_hook("pre_llm_call", before_llm_call)
+    """Register the CTE hook and optional metadata-only KIE publisher."""
+    try:
+        socket_path = ctx.get_config("kie_event_socket", default=None)
+    except Exception:
+        socket_path = None
+
+    def hook(**kwargs):
+        return before_llm_call(
+            **kwargs,
+            _kie_event_publisher=lambda request: publish_review_routed(socket_path, request),
+        )
+
+    ctx.register_hook("pre_llm_call", hook)
