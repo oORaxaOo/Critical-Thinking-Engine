@@ -5,7 +5,7 @@ import threading
 import unittest
 from pathlib import Path
 
-from critical_thinking.kie_events import publish_review_routed
+from critical_thinking.kie_events import publish_hook_failure, publish_review_routed
 from critical_thinking.models import Intent, ReviewLevel, ReviewRequest
 
 
@@ -66,6 +66,15 @@ class KIEEventPublisherTests(unittest.TestCase):
     def test_publisher_fails_open_when_kie_socket_is_unavailable(self):
         request = ReviewRequest(Intent.FACTUAL_CLAIM, ReviewLevel.REVIEW, "technical claim")
         self.assertFalse(publish_review_routed(self.root / "missing.sock", request))
+
+
+
+    def test_hook_failure_publishes_only_a_stable_failure_code(self):
+        message = self._capture(lambda path: publish_hook_failure(path))
+        self.assertEqual(message["engine_id"], "critical_thinking")
+        self.assertEqual(message["event_type"], "critical_thinking.hook_failure")
+        self.assertEqual(message["payload"], {"failure_code": "hook_exception"})
+        self.assertNotIn("exception_text", json.dumps(message))
 
     def test_normal_review_is_not_published(self):
         request = ReviewRequest(Intent.OPINION, ReviewLevel.NORMAL, "opinions are not challenged")

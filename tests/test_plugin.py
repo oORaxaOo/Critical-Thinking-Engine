@@ -9,14 +9,15 @@ from critical_thinking.plugin import before_llm_call, register
 
 
 class FakeContext:
-    def __init__(self):
+    def __init__(self, settings=None):
         self.hooks = {}
+        self.settings = settings or {}
 
     def register_hook(self, name, callback):
         self.hooks[name] = callback
 
     def get_config(self, key, default=None):
-        return default
+        return self.settings.get(key, default)
 
 
 class PluginTests(unittest.TestCase):
@@ -70,6 +71,19 @@ class PluginTests(unittest.TestCase):
     def test_hook_fails_open_when_internal_logic_raises(self):
         with patch("critical_thinking.plugin.classify_message", side_effect=RuntimeError("test")):
             self.assertIsNone(before_llm_call(user_message="Wir sollten ein Plugin bauen."))
+
+
+
+    def test_registered_hook_reports_internal_failure_without_blocking(self):
+        ctx = FakeContext({"kie_event_socket": "/tmp/kie-events.sock"})
+        failures = []
+        with patch("critical_thinking.plugin.publish_hook_failure", side_effect=lambda path: failures.append(path)):
+            register(ctx)
+            with patch("critical_thinking.plugin.classify_message", side_effect=RuntimeError("private diagnostic")):
+                result = ctx.hooks["pre_llm_call"](user_message="Wir sollten ein Plugin bauen.")
+
+        self.assertIsNone(result)
+        self.assertEqual(failures, ["/tmp/kie-events.sock"])
 
     def test_empty_message_fails_open(self):
         self.assertIsNone(before_llm_call(user_message=""))

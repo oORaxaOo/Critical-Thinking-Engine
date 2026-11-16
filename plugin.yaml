@@ -6,4 +6,4 @@ provides_hooks:
 config_schema:
   kie_event_socket:
     type: string
-    default: ""
+    default: "~/.hermes/run/kie-engine-events.sock"
