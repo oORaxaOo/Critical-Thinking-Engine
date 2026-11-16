@@ -39,7 +39,7 @@ class PluginTests(unittest.TestCase):
         )
         self.assertEqual(set(result), {"context"})
         self.assertIn("REVIEW", result["context"])
-        self.assertIn("technical proposal or decision", result["context"])
+        self.assertIn("Technical proposal or decision detected.", result["context"])
 
     def test_personal_message_does_not_inject_critique(self):
         self.assertIsNone(before_llm_call(user_message="Ich bin traurig."))
